@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
+import { BACKEND_URL } from '../constant';
+import axios from 'axios';
 
 interface loginForm {
     email: string;
@@ -12,10 +14,13 @@ const Login: React.FC = () => {
     password: ''
   });
 
-  const handleSubmit = (e: React.FormEvent) => {
-      e.preventDefault();
-      // Handle login logic here
-      console.log('Login details:', loginDetails);
+  const handleSubmit = async (e: React.FormEvent) => {
+      try {
+        e.preventDefault();
+        const response = await axios.post(`${BACKEND_URL}/login`, loginDetails);
+      } catch (error) {
+        console.log(error, 'Error during login');
+      }
     };
 
   return (

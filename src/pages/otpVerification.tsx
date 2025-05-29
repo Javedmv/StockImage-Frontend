@@ -1,5 +1,7 @@
 import React, { useState, useRef } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
+import { BACKEND_URL } from '../constant';
+import axios from 'axios';
 
 const OtpVerification: React.FC = () => {
   const [otp, setOtp] = useState(['', '', '', '']);
@@ -46,8 +48,12 @@ const OtpVerification: React.FC = () => {
     }
 
     // TODO: Replace with real API call
-    const isVerified = await fakeVerifyOtp(email, enteredOtp);
-    if (isVerified) {
+    const response = await verifyOtp(email, enteredOtp);
+    if (!response?.data.isVerified) {
+      setError('Something went wrong. Please try again.');
+      return;
+    }
+    if (response.data.isVerified === true) {
       alert('OTP Verified!');
       navigate('/login');
     } else {
@@ -55,10 +61,14 @@ const OtpVerification: React.FC = () => {
     }
   };
 
-  const fakeVerifyOtp = async (email: string | null, otp: string) => {
-    console.log('Verifying OTP:', { email, otp });
-    await new Promise((res) => setTimeout(res, 1000));
-    return otp === '1234'; // Stub condition
+  const verifyOtp = async (email: string | null, otp: string) => {
+    try {
+      const response = await axios.post(`${BACKEND_URL}/verify-otp`, { email, otp });
+      console.log(response,"from otp verification true or false")
+      return response
+    } catch (error) {
+      console.log(error, 'Error verifying OTP');
+    }
   };
 
   return (

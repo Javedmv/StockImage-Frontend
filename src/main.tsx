@@ -7,5 +7,6 @@ import "./App.css"
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <App />
-  </StrictMode>,
+  </StrictMode>
+  // TODO: toast need to implement
 )
