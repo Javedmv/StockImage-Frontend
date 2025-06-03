@@ -69,9 +69,11 @@ const Signup: React.FC = () => {
     }
   
     try {
-      const response = await axios.post(`${BACKEND_URL}/signup`, signupDetails); // replace with your backend URL
+      const response = await axios.post(`${BACKEND_URL}/signup`, signupDetails, {withCredentials:true});
       console.log('Signup success:', response);
-  
+      if(response.status !== 200) {
+        throw new Error('Signup failed');
+      }
       // Navigate to OTP page with email
       navigate(`/verify-otp?email=${signupDetails.email}`);
     } catch (error: any) {

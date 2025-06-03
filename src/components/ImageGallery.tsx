@@ -25,21 +25,21 @@ const ImageGallery: React.FC = () => {
   const user = useUserStore((state) => state.user);
 
   useEffect(() => {
-    const fetchImages = async () => {
-      try {
-        const res = await axios.get(`${BACKEND_URL}/images`, {
-          withCredentials: true,
-        });
-        if (res.status === 200 && Array.isArray(res.data.images)) {
-          setImages(res.data.images);
-        }
-      } catch (err) {
-        console.error("Failed to fetch images:", err);
-      }
-    };
-
     fetchImages();
   }, []);
+
+  const fetchImages = async () => {
+    try {
+      const res = await axios.get(`${BACKEND_URL}/images`, {
+        withCredentials: true,
+      });
+      if (res.status === 200 && Array.isArray(res.data.images)) {
+        setImages(res.data.images);
+      }
+    } catch (err) {
+      console.error("Failed to fetch images:", err);
+    }
+  };
 
   const handleDrop = async () => {
     // Prepare updated order list
@@ -59,7 +59,6 @@ const ImageGallery: React.FC = () => {
       console.error('Failed to update image order:', error);
     }
   };
-  
 
   const moveCard = useCallback(
     (dragIndex: number, hoverIndex: number) => {
@@ -129,7 +128,7 @@ const ImageGallery: React.FC = () => {
 
       if (res.status === 200) {
         alert("Upload successful!");
-        window.location.reload(); // Refresh the list
+        window.location.reload(); 
       }
     } catch (err: any) {
       console.error("Upload failed:", err);
@@ -155,22 +154,53 @@ const ImageGallery: React.FC = () => {
     }
   };
 
-  const handleEdit = async (id: string, title: string) => {
+  const handleEdit = async (id: string, title: string, imageFile?: File) => {
     try {
-      const res = await axios.put(
-        `${BACKEND_URL}/images/${id}`,
-        { title },
-        { withCredentials: true }
-      );
+      if (imageFile) {
+        // If there's an image file, update both title and image
+        const formData = new FormData();
+        formData.append("title", title);
+        formData.append("image", imageFile);
 
-      if (res.status === 200) {
-        setImages((prev) =>
-          prev.map((img) => (img._id === id ? { ...img, title } : img))
+        const res = await axios.put(
+          `${BACKEND_URL}/edit-images/${id}`,
+          formData,
+          {
+            headers: { "Content-Type": "multipart/form-data" },
+            withCredentials: true,
+          }
         );
+
+        if (res.status === 200) {
+          const updatedImage = res.data.image;
+          setImages((prev) =>
+            prev.map((img) => 
+              img._id === id 
+                ? { ...img, title: updatedImage.title, imageUrl: updatedImage.imageUrl } 
+                : img
+            )
+          );
+          fetchImages()
+          alert("Image and title updated successfully!");
+        }
+      } else {
+        // If no image file, update only title
+        const res = await axios.put(
+          `${BACKEND_URL}/images/${id}`,
+          { title },
+          { withCredentials: true }
+        );
+
+        if (res.status === 200) {
+          setImages((prev) =>
+            prev.map((img) => (img._id === id ? { ...img, title } : img))
+          );
+          alert("Title updated successfully!");
+        }
       }
-    } catch (err) {
+    } catch (err: any) {
       console.error("Edit failed:", err);
-      alert("Failed to update title.");
+      alert(err.response?.data?.message || "Failed to update.");
     }
   };
 
