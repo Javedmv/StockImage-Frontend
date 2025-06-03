@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { BACKEND_URL } from '../constant';
 import axios from 'axios';
+import useUserStore from '../store';
 
 interface loginForm {
     email: string;
@@ -13,15 +14,22 @@ const Login: React.FC = () => {
     email: '',
     password: ''
   });
+  const navigate = useNavigate();
 
   const handleSubmit = async (e: React.FormEvent) => {
-      try {
-        e.preventDefault();
-        const response = await axios.post(`${BACKEND_URL}/login`, loginDetails);
-      } catch (error) {
-        console.log(error, 'Error during login');
+    try {
+      e.preventDefault();
+      const response = await axios.post(`${BACKEND_URL}/login`, loginDetails, { withCredentials: true });
+      if(response.status === 200) {
+        if (response.data.user) {
+          useUserStore.getState().setUser(response.data.user);
+          navigate('/');
+        }
       }
-    };
+    } catch (error) {
+      console.log(error, 'Error during login');
+    }
+  };
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-100 px-4">
@@ -36,7 +44,7 @@ const Login: React.FC = () => {
               type="text"
               id="email"
               className="mt-1 w-full px-4 py-2 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
-              placeholder="Email/Phone"
+              placeholder="Email"
               onChange={(e) => setLoginDetails({ ...loginDetails, email: e.target.value })}
             />
           </div>
