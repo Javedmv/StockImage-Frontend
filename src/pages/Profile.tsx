@@ -1,16 +1,13 @@
 import axios from "axios";
 import { useState } from "react";
 import { BACKEND_URL } from "../constant";
+import { toast } from "react-toastify";
+import useUserStore from "../store";
 
 const Profile = () => {
-  const [oldPassword, setOldPassword] = useState("");
+    const user = useUserStore((state) => state.user);
+    const [oldPassword, setOldPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
-
-  // Replace with actual user state or props
-  const user = {
-    username: "javed",
-    email: "javedmv777@gmail.com",
-  };
 
   const handlePasswordUpdate = async () => {
     try {
@@ -21,13 +18,13 @@ const Profile = () => {
       );
   
       if (response.status === 200) {
-        alert(response.data.message || "Password updated successfully.");
+        toast.success(response.data.message || "Password updated successfully.");
       }
     } catch (error: any) {
       if (error.response && error.response.data && error.response.data.message) {
-        alert(`Error: ${error.response.data.message}`);
+        toast.error(`Error: ${error.response.data.message}`);
       } else {
-        alert("An unexpected error occurred. Please try again.");
+        toast.error("An unexpected error occurred. Please try again.");
       }
     } finally {
       setOldPassword("");

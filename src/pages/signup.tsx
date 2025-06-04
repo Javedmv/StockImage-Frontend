@@ -2,6 +2,7 @@ import React from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { BACKEND_URL } from '../constant';
+import { toast } from 'react-toastify';
 
 interface SignupForm {
   name: string;
@@ -69,7 +70,7 @@ const Signup: React.FC = () => {
     }
   
     try {
-      const response = await axios.post(`${BACKEND_URL}/signup`, signupDetails, {withCredentials:true});
+      const response = await axios.post(`${BACKEND_URL}/signup`, signupDetails);
       console.log('Signup success:', response);
       if(response.status !== 200) {
         throw new Error('Signup failed');
@@ -77,8 +78,14 @@ const Signup: React.FC = () => {
       // Navigate to OTP page with email
       navigate(`/verify-otp?email=${signupDetails.email}`);
     } catch (error: any) {
-      console.error('Signup error:', error.response?.data || error.message);
-      alert(error.response?.data?.message || 'Signup failed. Please try again.');
+      console.error('Signup error:', error);
+      if (axios.isAxiosError(error) && error.response) {
+        const errorMessage = error.response.data.message || 'Signup failed. Please try again.';
+        toast.error(errorMessage);
+      } else {
+        setErrors((prev) => ({ ...prev, email: 'An unexpected error occurred. Please try again later.' }));
+        toast.error('An unexpected error occurred. Please try again later.');
+      }
     }
   };
   

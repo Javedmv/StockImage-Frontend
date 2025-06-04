@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { BACKEND_URL } from '../constant';
 import axios from 'axios';
 import useUserStore from '../store';
+import { toast } from 'react-toastify';
 
 interface loginForm {
     email: string;
@@ -27,7 +28,12 @@ const Login: React.FC = () => {
         }
       }
     } catch (error) {
-      console.log(error, 'Error during login');
+      if (axios.isAxiosError(error) && error.response) {
+        const errorMessage = error.response.data.message || 'Login failed. Please try again.';
+        toast.error(errorMessage);
+      } else {
+        toast.error('An unexpected error occurred. Please try again later.');
+      }
     }
   };
 

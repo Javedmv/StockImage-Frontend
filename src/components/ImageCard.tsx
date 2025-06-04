@@ -1,6 +1,7 @@
 import { useRef, useState } from "react";
 import { useDrag, useDrop } from "react-dnd";
 import type { ImageItem } from "./ImageGallery";
+import { toast } from "react-toastify";
 
 type ImageCardProps = {
   image: ImageItem;
@@ -58,8 +59,8 @@ const ImageCard: React.FC<ImageCardProps> = ({
     if (!file) return;
 
     if (!file.type.startsWith('image/')) {
-      alert('Please select a valid image file');
-      return;
+        toast.error('Please select a valid image file.');
+        return;
     }
 
     const reader = new FileReader();

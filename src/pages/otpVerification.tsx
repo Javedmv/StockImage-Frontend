@@ -2,6 +2,7 @@ import React, { useState, useRef } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { BACKEND_URL } from '../constant';
 import axios from 'axios';
+import { toast } from 'react-toastify';
 
 const OtpVerification: React.FC = () => {
   const [otp, setOtp] = useState(['', '', '', '']);
@@ -54,7 +55,7 @@ const OtpVerification: React.FC = () => {
       return;
     }
     if (response.data.isVerified === true) {
-      alert('OTP Verified!');
+      toast.success('OTP Verified!');
       navigate('/login');
     } else {
       setError('Invalid OTP. Please try again.');
@@ -67,7 +68,12 @@ const OtpVerification: React.FC = () => {
       console.log(response,"from otp verification true or false")
       return response
     } catch (error) {
-      console.log(error, 'Error verifying OTP');
+      if (axios.isAxiosError(error)) {
+        const message = error.response?.data?.message || "Failed to verify OTP. Please try again later.";
+        toast.error(message);
+      } else {
+        toast.error("An unexpected error occurred.");
+      }
     }
   };
 

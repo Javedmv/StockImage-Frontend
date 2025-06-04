@@ -7,6 +7,7 @@ import ImageCard from "./ImageCard";
 import useUserStore from "../store";
 import { BACKEND_URL } from "../constant";
 import { v4 as uuidv4 } from "uuid";
+import { toast } from "react-toastify";
 
 export type ImageItem = {
   _id?: string;
@@ -127,32 +128,39 @@ const ImageGallery: React.FC = () => {
       });
 
       if (res.status === 200) {
-        alert("Upload successful!");
-        window.location.reload(); 
+        toast.success("Images uploaded successfully!");
+        fetchImages();
       }
     } catch (err: any) {
       console.error("Upload failed:", err);
-      alert(err.response?.data?.message || "Upload failed");
+      toast.error(err.response?.data?.message || "Failed to upload images.");
     }
   };
 
   const handleDelete = async (id: string) => {
-    const confirm = window.confirm("Are you sure you want to delete this image?");
-    if (!confirm) return;
-
+    const confirmDelete = window.confirm("Are you sure you want to delete this image?");
+    if (!confirmDelete) return;
+  
     try {
       const res = await axios.delete(`${BACKEND_URL}/images/${id}`, {
         withCredentials: true,
       });
-
+  
       if (res.status === 200) {
         setImages((prev) => prev.filter((img) => img._id !== id));
+        toast.success("Image deleted successfully.");
       }
-    } catch (err) {
-      console.error("Delete failed:", err);
-      alert("Failed to delete image.");
+    } catch (error) {
+      console.error("Delete failed:", error);
+      if (axios.isAxiosError(error)) {
+        const message = error.response?.data?.message || "Failed to delete image.";
+        toast.error(message);
+      } else {
+        toast.error("An unexpected error occurred.");
+      }
     }
   };
+  
 
   const handleEdit = async (id: string, title: string, imageFile?: File) => {
     try {
@@ -181,7 +189,7 @@ const ImageGallery: React.FC = () => {
             )
           );
           fetchImages()
-          alert("Image and title updated successfully!");
+          toast.success("Image and Title updated successfully!");
         }
       } else {
         // If no image file, update only title
@@ -195,12 +203,12 @@ const ImageGallery: React.FC = () => {
           setImages((prev) =>
             prev.map((img) => (img._id === id ? { ...img, title } : img))
           );
-          alert("Title updated successfully!");
+          toast.success("Title updated successfully!");
         }
       }
     } catch (err: any) {
       console.error("Edit failed:", err);
-      alert(err.response?.data?.message || "Failed to update.");
+      toast.success(err.response?.data?.message || "Failed to update.");
     }
   };
 
