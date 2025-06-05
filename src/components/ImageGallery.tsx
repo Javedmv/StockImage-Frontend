@@ -49,7 +49,7 @@ const ImageGallery: React.FC = () => {
     }));
   
     try {
-      const response = await axios.post(`${BACKEND_URL}/images/reorder`, { updates: orderedImages } , {withCredentials: true});
+      await axios.post(`${BACKEND_URL}/images/reorder`, { updates: orderedImages } , {withCredentials: true});
     } catch (error) {
       console.error('Failed to update image order:', error);
     }
