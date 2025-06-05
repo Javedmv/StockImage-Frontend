@@ -9,8 +9,9 @@ const Profile = () => {
     const [oldPassword, setOldPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
 
-  const handlePasswordUpdate = async () => {
+  const handlePasswordUpdate = async (e: React.FormEvent) => {
     try {
+        e.preventDefault();
       const response = await axios.post(
         `${BACKEND_URL}/update-password`,
         { oldPassword, newPassword },

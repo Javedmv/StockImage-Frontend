@@ -1,4 +1,4 @@
-import { useRef, useState } from "react";
+import React, { useRef, useState } from "react";
 import { useDrag, useDrop } from "react-dnd";
 import type { ImageItem } from "./ImageGallery";
 import { toast } from "react-toastify";
@@ -198,4 +198,4 @@ const ImageCard: React.FC<ImageCardProps> = ({
   );
 };
 
-export default ImageCard;
+export default React.memo(ImageCard);

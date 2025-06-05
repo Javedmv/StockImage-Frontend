@@ -1,13 +1,17 @@
 import { useEffect } from "react";
 import { Navigate, RouterProvider, createBrowserRouter } from "react-router-dom";
-import Home from "./pages/home";
-import Login from "./pages/login";
-import Signup from "./pages/signup";
-import OtpVerification from "./pages/otpVerification";
+import { lazy, Suspense } from 'react';
 import useUserStore from "./store";
 import axios from "axios";
 import { BACKEND_URL } from "./constant";
-import Profile from "./pages/Profile";
+import ShimmerFallback from "./components/Shimmer";
+
+
+const Home = lazy(() => import('./pages/home'));
+const Login = lazy(() => import('./pages/login'));
+const Signup = lazy(() => import('./pages/signup'));
+const OtpVerification = lazy(() => import('./pages/otpVerification'));
+const Profile = lazy(() => import('./pages/Profile'));
 
 const createRouter = (user: any) => {
   return createBrowserRouter([
@@ -46,7 +50,8 @@ function App() {
         setUser(response.data.user);
       }
     } catch (error) {
-      console.log("Error fetching user", error);
+      console.error("Failed to fetch user:", error);
+      // Optionally handle error, e.g., setUser(null) or show a toast
     }
   };
 
@@ -55,11 +60,12 @@ function App() {
       getUser();
     }
   }, [user]);
-
-  // Create router only once per render based on user
-  const router = createRouter(user);
-
-  return <RouterProvider router={router} />;
+  
+  return (
+    <Suspense fallback={<ShimmerFallback />}>
+      <RouterProvider router={createRouter(user)} />
+    </Suspense>
+  );
 }
 
 export default App;

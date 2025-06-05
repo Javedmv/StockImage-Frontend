@@ -43,7 +43,6 @@ const ImageGallery: React.FC = () => {
   };
 
   const handleDrop = async () => {
-    // Prepare updated order list
     const orderedImages = images.map((img, index) => ({
       id: img._id,
       order: index + 1,
@@ -76,12 +75,13 @@ const ImageGallery: React.FC = () => {
     [images]
   );
 
-  const handleTitleChange = (index: number, newTitle: string) => {
-    const newImages = [...images];
-    newImages[index].title = newTitle;
-    console.log(newImages[index]);
-    setImages(newImages);
-  };
+  const handleTitleChange = useCallback((index: number, newTitle: string) => {
+    setImages((prev) => {
+      const newImages = [...prev];
+      newImages[index].title = newTitle;
+      return newImages;
+    });
+  }, []);
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
@@ -137,15 +137,15 @@ const ImageGallery: React.FC = () => {
     }
   };
 
-  const handleDelete = async (id: string) => {
+  const handleDelete = useCallback(async (id: string) => {
     const confirmDelete = window.confirm("Are you sure you want to delete this image?");
     if (!confirmDelete) return;
-  
+
     try {
       const res = await axios.delete(`${BACKEND_URL}/images/${id}`, {
         withCredentials: true,
       });
-  
+
       if (res.status === 200) {
         setImages((prev) => prev.filter((img) => img._id !== id));
         toast.success("Image deleted successfully.");
@@ -159,17 +159,15 @@ const ImageGallery: React.FC = () => {
         toast.error("An unexpected error occurred.");
       }
     }
-  };
-  
+  }, []);
 
-  const handleEdit = async (id: string, title: string, imageFile?: File) => {
+  const handleEdit = useCallback(async (id: string, title: string, imageFile?: File) => {
     try {
       if (imageFile) {
-        // If there's an image file, update both title and image
         const formData = new FormData();
         formData.append("title", title);
         formData.append("image", imageFile);
-
+  
         const res = await axios.put(
           `${BACKEND_URL}/edit-images/${id}`,
           formData,
@@ -178,27 +176,18 @@ const ImageGallery: React.FC = () => {
             withCredentials: true,
           }
         );
-
+  
         if (res.status === 200) {
-          const updatedImage = res.data.image;
-          setImages((prev) =>
-            prev.map((img) => 
-              img._id === id 
-                ? { ...img, title: updatedImage.title, imageUrl: updatedImage.imageUrl } 
-                : img
-            )
-          );
-          fetchImages()
+          fetchImages();
           toast.success("Image and Title updated successfully!");
         }
       } else {
-        // If no image file, update only title
         const res = await axios.put(
           `${BACKEND_URL}/images/${id}`,
           { title },
           { withCredentials: true }
         );
-
+  
         if (res.status === 200) {
           setImages((prev) =>
             prev.map((img) => (img._id === id ? { ...img, title } : img))
@@ -210,13 +199,13 @@ const ImageGallery: React.FC = () => {
       console.error("Edit failed:", err);
       toast.success(err.response?.data?.message || "Failed to update.");
     }
-  };
+  }, []);
 
   return (
     <DndProvider backend={HTML5Backend}>
-      <div className="max-w-4xl mx-auto p-6">
+      <div className="max-w-7xl mx-auto p-6">
         <h2 className="text-2xl font-bold mb-4 text-center">
-          {capitalizeFirstLetter(user.username!)}'s Image Gallery
+          {capitalizeFirstLetter(user?.username!)}'s Image Gallery
         </h2>
 
         <input
@@ -235,7 +224,7 @@ const ImageGallery: React.FC = () => {
           Select Images
         </button>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           {images.length > 0 ? (
             images.map((img, index) => (
               <ImageCard
