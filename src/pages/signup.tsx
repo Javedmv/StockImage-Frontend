@@ -71,7 +71,6 @@ const Signup: React.FC = () => {
   
     try {
       const response = await axios.post(`${BACKEND_URL}/signup`, signupDetails);
-      console.log('Signup success:', response);
       if(response.status !== 200) {
         throw new Error('Signup failed');
       }

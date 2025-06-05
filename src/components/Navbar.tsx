@@ -2,6 +2,7 @@ import { Link, useNavigate } from "react-router-dom";
 import useUserStore from "../store";
 import axios from "axios";
 import { BACKEND_URL } from "../constant";
+import { toast } from "react-toastify";
 
 const Navbar = () => {
   const user = useUserStore((state) => state.user);
@@ -15,7 +16,9 @@ const Navbar = () => {
       deleteUser();
       navigate("/login", { replace: true });
     } catch (error) {
-      console.log(error, 'Error during logout');
+      if (axios.isAxiosError(error) && error.response) {
+        toast.error(error.response.data.message || "Logout failed. Please try again."); 
+      }
     }
   };
 

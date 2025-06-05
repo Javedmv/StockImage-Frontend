@@ -5,7 +5,6 @@ import { Link } from "react-router-dom";
 
 const Home = () => {
   const user = useUserStore((state) => state.user);
-  console.log(user)
   
   return (
     <div>

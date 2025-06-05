@@ -50,11 +50,6 @@ const ImageGallery: React.FC = () => {
   
     try {
       const response = await axios.post(`${BACKEND_URL}/images/reorder`, { updates: orderedImages } , {withCredentials: true});
-      if (response.status === 200) {
-        console.log('Image order updated successfully');
-      } else {
-        console.error('Failed to update image order:', response.data);
-      }
     } catch (error) {
       console.error('Failed to update image order:', error);
     }
