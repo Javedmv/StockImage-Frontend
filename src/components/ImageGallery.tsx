@@ -4,7 +4,7 @@ import { HTML5Backend } from "react-dnd-html5-backend";
 import update from "immutability-helper";
 import axios from "axios";
 import ImageCard from "./ImageCard";
-import useUserStore from "../store";
+import useAppStore from "../store";
 import { BACKEND_URL } from "../constant";
 import { v4 as uuidv4 } from "uuid";
 import { toast } from "react-toastify";
@@ -23,15 +23,14 @@ const capitalizeFirstLetter = (str: string) =>
 const ImageGallery: React.FC = () => {
   const [images, setImages] = useState<ImageItem[]>([]);
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const user = useUserStore((state) => state.user);
+  const user = useAppStore((state) => state.user);
+  const isLoading = useAppStore((state) => state.isLoading);
+  const setLoading = useAppStore((state) => state.setLoading);
 
-  useEffect(() => {
-    fetchImages();
-  }, []);
-
-  const fetchImages = async () => {
+  const fetchImages = useCallback(async () => {
+    setLoading(true);
     try {
-      const res = await axios.get(`${BACKEND_URL}/images`, {
+      const res = await axios.get(`${BACKEND_URL}/api/images`, {
         withCredentials: true,
       });
       if (res.status === 200 && Array.isArray(res.data.images)) {
@@ -39,17 +38,22 @@ const ImageGallery: React.FC = () => {
       }
     } catch (err) {
       console.error("Failed to fetch images:", err);
+    } finally {
+      setLoading(false);
     }
-  };
+  }, [setLoading]);
+
+  useEffect(() => {
+    fetchImages();
+  }, [fetchImages]);
 
   const handleDrop = async () => {
-    const orderedImages = images.map((img, index) => ({
-      id: img._id,
-      order: index + 1,
-    }));
-  
     try {
-      await axios.post(`${BACKEND_URL}/images/reorder`, { updates: orderedImages } , {withCredentials: true});
+      const orderedImages = images.map((img, index) => ({
+        id: img._id,
+        order: index + 1,
+      }));
+      await axios.post(`${BACKEND_URL}/api/images/reorder`, { updates: orderedImages }, { withCredentials: true });
     } catch (error) {
       console.error('Failed to update image order:', error);
     }
@@ -79,22 +83,29 @@ const ImageGallery: React.FC = () => {
   }, []);
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = e.target.files;
-    if (!files || files.length === 0) return;
+    setLoading(true);
+    try {
+      const files = e.target.files;
+      if (!files || files.length === 0) return;
 
-    const previews: ImageItem[] = await Promise.all(
-      Array.from(files).map(async (file) => {
-        const base64 = await convertToBase64(file);
-        return {
-          _id: uuidv4(),
-          title: file.name.split(".")[0],
-          imageUrl: base64 as string,
-          file,
-          isNew: true,
-        };
-      })
-    );
-    setImages((prev) => [...prev, ...previews]);
+      const previews: ImageItem[] = await Promise.all(
+        Array.from(files).map(async (file) => {
+          const base64 = await convertToBase64(file);
+          return {
+            _id: uuidv4(),
+            title: file.name.split(".")[0],
+            imageUrl: base64 as string,
+            file,
+            isNew: true,
+          };
+        })
+      );
+      setImages((prev) => [...prev, ...previews]);
+    } catch (error) {
+      console.error("Error uploading images:", error);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const convertToBase64 = (file: File): Promise<string | ArrayBuffer | null> => {
@@ -107,17 +118,18 @@ const ImageGallery: React.FC = () => {
   };
 
   const handleUpload = async () => {
-    const formData = new FormData();
-    images.forEach((img, index) => {
-      if (img.isNew && img.file) {
-        formData.append("images", img.file);
-        formData.append("titles", img.title);
-        formData.append("orders", String(index));
-      }
-    });
-
+    setLoading(true);
     try {
-      const res = await axios.post(`${BACKEND_URL}/upload`, formData, {
+      const formData = new FormData();
+      images.forEach((img, index) => {
+        if (img.isNew && img.file) {
+          formData.append("images", img.file);
+          formData.append("titles", img.title);
+          formData.append("orders", String(index));
+        }
+      });
+
+      const res = await axios.post(`${BACKEND_URL}/api/images/upload`, formData, {
         headers: { "Content-Type": "multipart/form-data" },
         withCredentials: true,
       });
@@ -129,15 +141,18 @@ const ImageGallery: React.FC = () => {
     } catch (err: any) {
       console.error("Upload failed:", err);
       toast.error(err.response?.data?.message || "Failed to upload images.");
+    } finally {
+      setLoading(false);
     }
   };
 
   const handleDelete = useCallback(async (id: string) => {
-    const confirmDelete = window.confirm("Are you sure you want to delete this image?");
-    if (!confirmDelete) return;
-
+    setLoading(true);
     try {
-      const res = await axios.delete(`${BACKEND_URL}/images/${id}`, {
+      const confirmDelete = window.confirm("Are you sure you want to delete this image?");
+      if (!confirmDelete) return;
+
+      const res = await axios.delete(`${BACKEND_URL}/api/images/${id}`, {
         withCredentials: true,
       });
 
@@ -153,36 +168,39 @@ const ImageGallery: React.FC = () => {
       } else {
         toast.error("An unexpected error occurred.");
       }
+    } finally {
+      setLoading(false);
     }
   }, []);
 
   const handleEdit = useCallback(async (id: string, title: string, imageFile?: File) => {
+    setLoading(true);
     try {
       if (imageFile) {
         const formData = new FormData();
         formData.append("title", title);
         formData.append("image", imageFile);
-  
+
         const res = await axios.put(
-          `${BACKEND_URL}/edit-images/${id}`,
+          `${BACKEND_URL}/api/images/${id}`,
           formData,
           {
             headers: { "Content-Type": "multipart/form-data" },
             withCredentials: true,
           }
         );
-  
+
         if (res.status === 200) {
           fetchImages();
           toast.success("Image and Title updated successfully!");
         }
       } else {
         const res = await axios.put(
-          `${BACKEND_URL}/images/${id}`,
+          `${BACKEND_URL}/api/images/${id}/title`,
           { title },
           { withCredentials: true }
         );
-  
+
         if (res.status === 200) {
           setImages((prev) =>
             prev.map((img) => (img._id === id ? { ...img, title } : img))
@@ -193,6 +211,8 @@ const ImageGallery: React.FC = () => {
     } catch (err: any) {
       console.error("Edit failed:", err);
       toast.success(err.response?.data?.message || "Failed to update.");
+    } finally {
+      setLoading(false);
     }
   }, []);
 
@@ -210,16 +230,18 @@ const ImageGallery: React.FC = () => {
           accept="image/*"
           hidden
           onChange={handleFileChange}
+          disabled={isLoading}
         />
 
         <button
           onClick={() => fileInputRef.current?.click()}
-          className="mb-4 bg-gray-700 hover:bg-blue-950 text-white font-semibold py-2 px-4 rounded-xl"
+          className="mb-4 bg-gray-700 hover:bg-blue-950 text-white font-semibold py-2 px-4 rounded-xl disabled:opacity-50"
+          disabled={isLoading}
         >
-          Select Images
+          {isLoading ? 'Uploading...' : 'Select Images'}
         </button>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className={`grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 ${isLoading ? 'pointer-events-none opacity-50' : ''}`}>
           {images.length > 0 ? (
             images.map((img, index) => (
               <ImageCard
@@ -244,9 +266,10 @@ const ImageGallery: React.FC = () => {
         {images.some((img) => img.isNew) && (
           <button
             onClick={handleUpload}
-            className="mt-6 w-full bg-green-700 hover:bg-green-800 text-white font-semibold py-2 rounded-xl transition"
+            className="mt-6 w-full bg-green-700 hover:bg-green-800 text-white font-semibold py-2 rounded-xl transition disabled:opacity-50"
+            disabled={isLoading}
           >
-            Upload Selected Images
+            {isLoading ? 'Uploading...' : 'Upload Selected Images'}
           </button>
         )}
       </div>

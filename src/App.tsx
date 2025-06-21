@@ -1,11 +1,12 @@
 import { useEffect } from "react";
 import { Navigate, RouterProvider, createBrowserRouter } from "react-router-dom";
 import { lazy, Suspense } from 'react';
-import useUserStore from "./store";
+import useAppStore from "./store";
 import axios from "axios";
 import { BACKEND_URL } from "./constant";
 import ShimmerFallback from "./components/Shimmer";
-
+import Loader from "./components/Loader";
+import { ToastContainer } from 'react-toastify';
 
 const Home = lazy(() => import('./pages/home'));
 const Login = lazy(() => import('./pages/login'));
@@ -40,12 +41,12 @@ const createRouter = (user: any) => {
 };
 
 function App() {
-  const user = useUserStore((state) => state.user);
-  const setUser = useUserStore((state) => state.setUser);
+  const user = useAppStore((state) => state.user);
+  const setUser = useAppStore((state) => state.setUser);
 
   const getUser = async () => {
     try {
-      const response = await axios.get(`${BACKEND_URL}/get-user`, { withCredentials: true });
+      const response = await axios.get(`${BACKEND_URL}/api/users/me`, { withCredentials: true });
       if (response.status === 200 && response.data.user) {
         setUser(response.data.user);
       }
@@ -61,9 +62,13 @@ function App() {
     }
   }, [user]);
   
+  const router = createRouter(user);
+  
   return (
     <Suspense fallback={<ShimmerFallback />}>
-      <RouterProvider router={createRouter(user)} />
+      <Loader />
+      <RouterProvider router={router} />
+      <ToastContainer />
     </Suspense>
   );
 }

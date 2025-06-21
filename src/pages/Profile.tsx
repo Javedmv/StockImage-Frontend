@@ -2,10 +2,10 @@ import axios from "axios";
 import { useState } from "react";
 import { BACKEND_URL } from "../constant";
 import { toast } from "react-toastify";
-import useUserStore from "../store";
+import useAppStore from "../store";
 
 const Profile = () => {
-    const user = useUserStore((state) => state.user);
+    const user = useAppStore((state) => state.user);
     const [oldPassword, setOldPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
 
@@ -13,8 +13,11 @@ const Profile = () => {
     try {
         e.preventDefault();
       const response = await axios.post(
-        `${BACKEND_URL}/update-password`,
-        { oldPassword, newPassword },
+        `${BACKEND_URL}/api/users/update-password`,
+        {
+          oldPassword,
+          newPassword,
+        },
         { withCredentials: true }
       );
   

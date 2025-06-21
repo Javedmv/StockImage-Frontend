@@ -1,18 +1,18 @@
 import { Link, useNavigate } from "react-router-dom";
-import useUserStore from "../store";
+import useAppStore from "../store";
 import axios from "axios";
 import { BACKEND_URL } from "../constant";
 import { toast } from "react-toastify";
 
 const Navbar = () => {
-  const user = useUserStore((state) => state.user);
-  const deleteUser = useUserStore((state) => state.deleteUser);
+  const user = useAppStore((state) => state.user);
+  const deleteUser = useAppStore((state) => state.deleteUser);
   
   const navigate = useNavigate();
 
   const handleLogout = async () => {
     try {
-      await axios.post(`${BACKEND_URL}/logout`, {}, { withCredentials: true });
+      await axios.post(`${BACKEND_URL}/api/users/logout`, {}, { withCredentials: true });
       deleteUser();
       navigate("/login", { replace: true });
     } catch (error) {

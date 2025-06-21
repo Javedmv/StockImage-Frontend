@@ -1,10 +1,10 @@
 import Navbar from "../components/Navbar";
-import useUserStore from "../store";
+import useAppStore from "../store";
 import ImageGallery from '../components/ImageGallery';
 import { Link } from "react-router-dom";
 
 const Home = () => {
-  const user = useUserStore((state) => state.user);
+  const user = useAppStore((state) => state.user);
   
   return (
     <div>

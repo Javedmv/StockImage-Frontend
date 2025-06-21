@@ -64,7 +64,7 @@ const OtpVerification: React.FC = () => {
 
   const verifyOtp = async (email: string | null, otp: string) => {
     try {
-      const response = await axios.post(`${BACKEND_URL}/verify-otp`, { email, otp });
+      const response = await axios.post(`${BACKEND_URL}/api/users/verify-otp`, { email, otp });
       return response
     } catch (error) {
       if (axios.isAxiosError(error)) {

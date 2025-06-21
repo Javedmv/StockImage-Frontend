@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { BACKEND_URL } from '../constant';
 import axios from 'axios';
-import useUserStore from '../store';
+import useAppStore from '../store';
 import { toast } from 'react-toastify';
 
 interface loginForm {
@@ -11,29 +11,33 @@ interface loginForm {
 }
 
 const Login: React.FC = () => {
+  const navigate = useNavigate();
+  const { isLoading, setLoading, setUser } = useAppStore((state) => ({
+    isLoading: state.isLoading,
+    setLoading: state.setLoading,
+    setUser: state.setUser,
+  }));
+
   const [loginDetails, setLoginDetails] = useState<loginForm>({
     email: '',
     password: ''
   });
-  const navigate = useNavigate();
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    setLoading(true);
     try {
-      e.preventDefault();
-      const response = await axios.post(`${BACKEND_URL}/login`, loginDetails, { withCredentials: true });
+      const response = await axios.post(`${BACKEND_URL}/api/users/login`, loginDetails, { withCredentials: true });
       if(response.status === 200) {
         if (response.data.user) {
-          useUserStore.getState().setUser(response.data.user);
+          setUser(response.data.user);
           navigate('/');
         }
       }
-    } catch (error) {
-      if (axios.isAxiosError(error) && error.response) {
-        const errorMessage = error.response.data.message || 'Login failed. Please try again.';
-        toast.error(errorMessage);
-      } else {
-        toast.error('An unexpected error occurred. Please try again later.');
-      }
+    } catch (error: any) {
+      toast.error(error.response.data.message);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -68,9 +72,10 @@ const Login: React.FC = () => {
           </div>
           <button
             type="submit"
-            className="w-full bg-blue-950 text-white font-semibold py-2 rounded-xl hover:bg-blue-900 transition duration-200"
+            className="w-full bg-blue-500 text-white p-2 rounded-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50 disabled:opacity-50"
+            disabled={isLoading}
           >
-            Sign In
+            {isLoading ? 'Logging in...' : 'Login'}
           </button>
         </form>
         <p className="mt-4 text-sm text-center text-gray-600">

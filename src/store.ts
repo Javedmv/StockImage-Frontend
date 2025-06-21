@@ -7,17 +7,20 @@ interface User {
   isVerified?: boolean
 }
 
-type State = {
+interface AppState {
   user: User
+  isLoading: boolean
 }
 
 type Actions = {
   setUser: (user: User) => void
   deleteUser: () => void
+  setLoading: (loading: boolean) => void
 }
 
-const useUserStore = create<State & Actions>((set) => ({
+const useAppStore = create<AppState & Actions>((set) => ({
   user: {},
+  isLoading: false,
 
   setUser: (userData: User) =>
     set(() => ({
@@ -28,6 +31,11 @@ const useUserStore = create<State & Actions>((set) => ({
     set(() => ({
       user: {},
     })),
+
+  setLoading: (loading: boolean) =>
+    set(() => ({
+      isLoading: loading,
+    })),
 }))
 
-export default useUserStore;
+export default useAppStore;
