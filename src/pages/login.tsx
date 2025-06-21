@@ -12,11 +12,9 @@ interface loginForm {
 
 const Login: React.FC = () => {
   const navigate = useNavigate();
-  const { isLoading, setLoading, setUser } = useAppStore((state) => ({
-    isLoading: state.isLoading,
-    setLoading: state.setLoading,
-    setUser: state.setUser,
-  }));
+  const isLoading = useAppStore((state) => state.isLoading);
+  const setLoading = useAppStore((state) => state.setLoading);
+  const setUser = useAppStore((state) => state.setUser);
 
   const [loginDetails, setLoginDetails] = useState<loginForm>({
     email: '',
